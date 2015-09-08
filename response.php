@@ -7,7 +7,7 @@ $password = '9pyziTxBJbm0';
 
 
 try {
-    $mysqli = new mysqli($host, $username ,$password,$db_name);
+    $mysqli_conn = new mysqli($host, $username ,$password,$db_name);
 } catch (Exception $e) {
     print $e->getMessage();
 }
@@ -35,17 +35,9 @@ $responses_array = array(
 	);
 	
 
-//$posted_data = print_r($_POST,TRUE);
 $user_request = trim($_POST['Body']);
 
-// Second response to user; system asks for users first name
-//if(!filter_var(strtolower($user_request), FILTER_VALIDATE_EMAIL) === false) { // validate email address
-	//$_SESSION['user_email'] = $user_request;
-	
-	//$app_response = $responses_array['first_name']; // system will ask for user first name
-	//$_SESSION['last_question_asked'] = 'first_name';
 
-//}else{
 	// First response to user; system asks for users email
 	if(strtolower($user_request) == "subscribe"){ 
 		$app_response = $responses_array['subscribe'];
@@ -54,8 +46,8 @@ $user_request = trim($_POST['Body']);
 		mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$user_request);
 	}elseif( $_SESSION['last_question_asked'] == "email" ){
 		if(!filter_var(strtolower($user_request), FILTER_VALIDATE_EMAIL) === false) { // validate email address
-			$_SESSION['user_email'] = $user_request;
-	
+			$_SESSION['user_email'] = strtolower($user_request);
+			save_user_details("email", $_SESSION['user_email']);
 			$app_response = $responses_array['first_name']; // system will ask for user first name
 			$_SESSION['last_question_asked'] = 'first_name';
 		}else{
@@ -66,6 +58,7 @@ $user_request = trim($_POST['Body']);
 	// Third response to user; system asks for users last name
 	}elseif( isset($_SESSION['user_email']) && $_SESSION['last_question_asked'] == "first_name" ){
 		$_SESSION['first_name'] = $user_request;
+		save_user_details("first_name", $_SESSION['first_name'],true);
 		mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$_SESSION['first_name']);
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
 		$_SESSION['last_question_asked'] = 'last_name';
@@ -73,6 +66,7 @@ $user_request = trim($_POST['Body']);
 	// Fourth question; system asks if user is Jewish; maybe last question if user response is 'no'
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && $_SESSION['last_question_asked'] == "last_name" ){
 		$_SESSION['last_name'] = $user_request;
+		save_user_details("last_name", $_SESSION['last_name'],true);
 		$app_response = str_replace("LAST_NAME", $_SESSION['last_name'],$responses_array['thanks_signedup']);
 		$app_response .= ". " . str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['jewish']);
 		$_SESSION['last_question_asked'] = 'jewish';
@@ -80,19 +74,20 @@ $user_request = trim($_POST['Body']);
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && $_SESSION['last_question_asked'] == "jewish" ){
 		$_SESSION['yes_no'] = strtolower($user_request);
 		$_SESSION['jewish'] = strtolower($user_request);
+		save_user_details("jewish", $_SESSION['jewish'],true);
 		$app_response = $responses_array['believer']; 
 		$_SESSION['last_question_asked'] = 'believer';
 
 	}
 	elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
 		$_SESSION['believer'] = strtolower($user_request);
-		$app_response = $responses_array['final_thanks']; // user chose not to provide belief answers
+		save_user_details("believer", $_SESSION['believer'],true);
+		$app_response = $responses_array['final_thanks'];
 		
-		// TODO: The sytem should clear the session here
-		
+		session_destroy();		
 	}
-//}
-$app_response .= print_r(session_id(),true);
+
+//$app_response .= print_r(session_id(),true);
 $xml_response = '<?xml version="1.0" encoding="UTF-8" ?>';
 $xml_response .= '<Response>';
 $xml_response .= '<Message>' . $app_response . '</Message>';
@@ -100,15 +95,48 @@ $xml_response .= '</Response>';
 
 print $xml_response;
 
-mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$app_response);
+//mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$app_response);
+
+
+
+// Maybe this should be a class?
 
 /**
 * save_user_details
 * @param array $args Key-value pairs of user provided information
+* @return boolean
 * Example ("first_name"=>"King Arthur")
 * 
 *
 */
-function save_user_details($args){
+function save_user_details($field, $value, $update = false){
+	global $host;
+	global $db_name;
+	global $username;
+	global $password;
+	global $mysqli_conn;
+
 	extract($args);
+	if( $update === false){
+		
+		// prepare and bind
+		$stmt = $mysqli_conn->prepare("INSERT INTO visitors (" . $field . ") VALUES (?)");
+		$stmt->bind_param("s", $value);
+
+		
+		$stmt->execute();
+		
+		//$sql = "INSERT INTO visitors (". $field . ") VALUES ('" . $value . "')"; // enter email
+	}else{
+		$sql = "UPDATE visitors SET " . $field . " = '". $value ."' WHERE `email` = '" . $_SESSION['user_email'] . "'"; // update user record with optional information
+		if ($mysqli_conn->query($sql) === TRUE) {
+			$result = $field . " : " . $value . " " . $_SESSION['user_email'];
+		} else {
+			$result = "Error: " . $sql . "<br>" . $mysqli_conn->error;
+		}
+	}
+
+	
+	
+	mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
 }
