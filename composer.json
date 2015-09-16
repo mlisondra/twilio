@@ -1,5 +1,7 @@
 {
     "require": {
-        "twilio/sdk": "^4.3"
+        "twilio/sdk": "^4.3",
+		"vatps/mailchimp-rest-api": "dev-master",
+		"drewm/mailchimp-api" : "dev-api-v3"
     }
 }
