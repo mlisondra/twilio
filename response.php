@@ -51,18 +51,35 @@ $user_request = trim($_POST['Body']);
 			// Check to see if the email exists in the database
 			$sql = "SELECT * FROM visitors WHERE `email` = '".$_SESSION['user_email']."'";
 			$result = $mysqli_conn->query($sql);
-			if($result->num_rows == 1){
+			if($result->num_rows == 1){  // email exists; there is no need to save user details
 				extract($result->fetch_array(MYSQLI_ASSOC));
-				$text =last_modified;
-			}else{
+				$text = last_modified;
+			}else{ // user email does not exist save to db and send to mailchimp
 				$text = print_r($result, true);
+				save_user_details("email", $_SESSION['user_email']);
+				$app_response = $responses_array['first_name']; // system will ask for user first name
+				$_SESSION['last_question_asked'] = 'first_name';
+				
+				// this section will need to placed within the save_user_details function or in a separate function
+				require("vendor/autoload.php");
+				$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11');
+				$list_id = 'd36f7938ca'; // List to add user to
+				$result = $mc->post('/lists/'.$list_id.'/members', array(
+					'email_address' => $_SESSION['user_email'],
+					//'merge_fields' => array('FNAME'=>'Milder', 'LNAME'=>'Lisondra'), // these should be used in the event that a user actually gives us first and last name
+					'status' => 'subscribed'
+				));	
+				if($result['status'] == 'subscribed'){
+					$email_text = 'User ' . $_SESSION['user_email'] . ' has been added to mailing list ' . $list_id;
+				}else{
+					$email_text = 'There was a problem adding user ' . $_SESSION['user_email'] . ' to list ' . $list_id;
+				}				
+				mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
+				
 			}
 			
 			mail("milder.lisondra@jewsforjesus.org","sql result for email",$text);
 			
-			save_user_details("email", $_SESSION['user_email']);
-			$app_response = $responses_array['first_name']; // system will ask for user first name
-			$_SESSION['last_question_asked'] = 'first_name';
 		}else{
 			$app_response = 'Please enter a valid email address';
 			$_SESSION['last_question_asked'] = 'email';
