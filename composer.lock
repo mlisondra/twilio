@@ -4,8 +4,50 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "61a62d26ba40218b724c30fbe248ce6a",
+    "hash": "28ee62c208167d0dc6ea11f00f4bedf3",
     "packages": [
+        {
+            "name": "drewm/mailchimp-api",
+            "version": "dev-api-v3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/drewm/mailchimp-api.git",
+                "reference": "244a506d25c30d12077c1fafa87ef988a68153b9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/drewm/mailchimp-api/zipball/244a506d25c30d12077c1fafa87ef988a68153b9",
+                "reference": "244a506d25c30d12077c1fafa87ef988a68153b9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.0.*",
+                "vlucas/phpdotenv": "^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "DrewM\\MailChimp\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Drew McLellan",
+                    "email": "drew.mclellan@gmail.com",
+                    "homepage": "http://allinthehead.com/"
+                }
+            ],
+            "description": "Super-simple, minimum abstraction MailChimp API v3 wrapper",
+            "homepage": "https://github.com/drewm/mailchimp-api",
+            "time": "2015-08-17 07:45:54"
+        },
         {
             "name": "twilio/sdk",
             "version": "4.3.0",
@@ -55,12 +97,59 @@
                 "twilio"
             ],
             "time": "2015-08-11 17:19:55"
+        },
+        {
+            "name": "vatps/mailchimp-rest-api",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vatps/mailchimp-rest-api.git",
+                "reference": "0e22131a01cb52583e33a3d66c78f271e0fe7f7e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vatps/mailchimp-rest-api/zipball/0e22131a01cb52583e33a3d66c78f271e0fe7f7e",
+                "reference": "0e22131a01cb52583e33a3d66c78f271e0fe7f7e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "VPS": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "VAT PS",
+                    "homepage": "http://vps.link"
+                }
+            ],
+            "description": "Very Easy to use MailChimp REST Enabled API 3.0 Wrapper Class.",
+            "homepage": "https://github.com/vatps/mailchimp-rest-api",
+            "keywords": [
+                "api",
+                "class",
+                "mailchimp",
+                "php"
+            ],
+            "time": "2015-06-26 20:49:28"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "vatps/mailchimp-rest-api": 20,
+        "drewm/mailchimp-api": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

@@ -31,7 +31,8 @@ $responses_array = array(
 		"thanks_signedup"=>"Thanks you're singed up to receive our regular updates",
 		"jewish"=>"We'd like to know some more about you FIRST_NAME. Please can you share, are you Jewish (yes or no)?",
 		"believer"=>"And are you a believer in Jesus (yes or no)?",
-		"final_thanks"=>"Great, thanks so much. We look forward to be in touch again soon. Shalom! Jews for Jesus"
+		"final_thanks"=>"Great, thanks so much. We look forward to be in touch again soon. Shalom! Jews for Jesus",
+		"invalid"=>"I'm sorry, I did not understand your request. Let's start over. Please text SUBSCRIBE."
 	);
 	
 
@@ -43,10 +44,22 @@ $user_request = trim($_POST['Body']);
 		$app_response = $responses_array['subscribe'];
 		$_SESSION['last_question_asked'] = 'email';
 		
-		mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$user_request);
 	}elseif( $_SESSION['last_question_asked'] == "email" ){
 		if(!filter_var(strtolower($user_request), FILTER_VALIDATE_EMAIL) === false) { // validate email address
 			$_SESSION['user_email'] = strtolower($user_request);
+			
+			// Check to see if the email exists in the database
+			$sql = "SELECT * FROM visitors WHERE `email` = '".$_SESSION['user_email']."'";
+			$result = $mysqli_conn->query($sql);
+			if($result->num_rows == 1){
+				extract($result->fetch_array(MYSQLI_ASSOC));
+				$text =last_modified;
+			}else{
+				$text = print_r($result, true);
+			}
+			
+			mail("milder.lisondra@jewsforjesus.org","sql result for email",$text);
+			
 			save_user_details("email", $_SESSION['user_email']);
 			$app_response = $responses_array['first_name']; // system will ask for user first name
 			$_SESSION['last_question_asked'] = 'first_name';
@@ -59,7 +72,7 @@ $user_request = trim($_POST['Body']);
 	}elseif( isset($_SESSION['user_email']) && $_SESSION['last_question_asked'] == "first_name" ){
 		$_SESSION['first_name'] = $user_request;
 		save_user_details("first_name", $_SESSION['first_name'],true);
-		mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$_SESSION['first_name']);
+
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
 		$_SESSION['last_question_asked'] = 'last_name';
 
@@ -85,17 +98,18 @@ $user_request = trim($_POST['Body']);
 		$app_response = $responses_array['final_thanks'];
 		
 		session_destroy();		
+	}else{
+		$app_response = $responses_array['invalid'];
+	
 	}
 
-//$app_response .= print_r(session_id(),true);
+//$app_response .= print_r($_SESSION,true);
 $xml_response = '<?xml version="1.0" encoding="UTF-8" ?>';
 $xml_response .= '<Response>';
 $xml_response .= '<Message>' . $app_response . '</Message>';
 $xml_response .= '</Response>';
 
 print $xml_response;
-
-//mail("milder.lisondra@jewsforjesus.org","from JFJ sms response page",$app_response);
 
 
 
@@ -137,6 +151,6 @@ function save_user_details($field, $value, $update = false){
 	}
 
 	
-	
+	$result .= print_r($_SESSION,true);
 	mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
 }
