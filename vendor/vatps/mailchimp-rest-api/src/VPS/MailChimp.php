@@ -78,7 +78,7 @@ class MailChimp
 	* @return array
 	*/
 	private function curlRequest($url, $httpVerb, array $data = array(), $curlTimeout = 15)
-	{
+	{ 
 		if(function_exists('curl_init') && function_exists('curl_setopt')){
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
@@ -96,7 +96,8 @@ class MailChimp
 			}
 			
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			$result = curl_exec($ch);
+			$result = curl_exec($ch); 
+			
 			curl_close($ch);
 			
 			return $result ? json_decode($result, true) : false;
