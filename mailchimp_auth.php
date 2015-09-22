@@ -20,20 +20,30 @@ $return = curl_exec($process);
 print_r($return);
 curl_close($process);
 */
+
+$list_id = 'd36f7938ca'; // personal
+$list_id = '4ec624cff2'; // JFJ account
+
 require("vendor/autoload.php");
-$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11');
-$result = $mc->get('/lists/');
+$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // personal
+$mc = new \VPS\MailChimp('585fd4605ba0afbb77335bbcef033dca-us10'); // JFJ account
+
+//$result = $mc->get('/lists/');
 //print '<pre>'; print_r($result); print '</pre>';
 
-$result = $mc->get('/lists/d36f7938ca/members');
+$result = $mc->get('/lists/' . $list_id . '/members');
 //print '<pre>'; print_r($result); print '</pre>';
 
-$list_id = 'd36f7938ca';
 
+/*
 $result = $mc->post('/lists/'.$list_id.'/members', array(
-                'email_address' => 'milder.lisondra@yahoo.com',
-                'merge_fields' => array('FNAME'=>'Milder', 'LNAME'=>'Lisondra'),
+                'email_address' => 'mlisondra@yahoo.com',
+                //'merge_fields' => array('FNAME'=>'Milder', 'LNAME'=>'Lisondra'),
                 'status' => 'subscribed'
             ));
-			
+	*/		
+	$endpoint = '/lists/'.$list_id.'/members/9331217d96301e6221cf5b0ee7de690d';
+
+	//$email_md5_hash = md5('milder.lisondra@yahoo.com'); 
+$result = $mc->delete($endpoint);
 print '<pre>'; print_r($result); print '</pre>';
