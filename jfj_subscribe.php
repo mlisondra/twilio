@@ -16,8 +16,8 @@ define("MAILCHIMP_API_KEY","585fd4605ba0afbb77335bbcef033dca-us10");
 
 
 $jfj_obj = new JFJ_subscribe();
-
-$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['first_name'], $field);
+$jfj_obj->get_user('milder2@yahoo.com');
+//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['first_name'], $field);
 
 class JFJ_subscribe{
 	
@@ -28,6 +28,22 @@ class JFJ_subscribe{
 		// This needs to be done here in the construct
 		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
 		$this->user_email = md5($_SESSION['user_email']);
+		
+	}
+	
+	/*
+	* Get user information for given id/email
+	* @param string $email User email
+	*/
+	public function get_user($email){
+		$email_md5_hash = md5($email); 
+		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+		$result = $this->mc->get($endpoint);
+		if($result['status'] == '404'){
+			print 'user does not exist';
+		}else{
+			print '<pre>'; print_r($result); print '</pre>';
+		}
 		
 	}
 	
@@ -51,7 +67,7 @@ class JFJ_subscribe{
 		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 		
 		$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
-		print '<pre>'; print_r($result); print '</pre>';
+		
 	}
 }
 
