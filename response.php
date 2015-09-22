@@ -18,6 +18,13 @@ $mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: p
 $mc = new \VPS\MailChimp('585fd4605ba0afbb77335bbcef033dca-us10'); // API key: JFJ account
 $list_id = 'd36f7938ca'; // personal
 $list_id = '4ec624cff2'; // JFJ account
+
+// JFJ
+define("LIST_ID","4ec624cff2");
+define("MAILCHIMP_API_KEY","585fd4605ba0afbb77335bbcef033dca-us10");
+
+$jfj_obj = new JFJ_subscribe();
+
 				
 				
 if(strtolower(trim($_POST['Body'])) == "clear"){
@@ -98,9 +105,11 @@ $user_request = trim($_POST['Body']);
 		save_user_details("first_name", $_SESSION['first_name'],true);
 		
 		// Update MailChimp
-		$email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'. $email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('FNAME'=>$_SESSION['first_name'])));
+		//$email_md5_hash = md5($_SESSION['user_email']); 
+		//$endpoint = '/lists/'.$list_id . '/members/'. $email_md5_hash;
+		//$result = $mc->patch($endpoint,array('merge_fields' => array('FNAME'=>$_SESSION['first_name'])));
+		
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['first_name'], 'FNAME');
 				
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
 		$_SESSION['last_question_asked'] = 'last_name';
@@ -200,3 +209,46 @@ function save_user_details($field, $value, $update = false){
 	$result .= print_r($_SESSION,true);
 	mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
 }
+
+
+
+
+class JFJ_subscribe{
+	
+	public $mc;
+	public $user_email;
+	
+	public function __construct(){
+		// This needs to be done here in the construct
+		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
+		$this->user_email = md5($_SESSION['user_email']);
+		
+	}
+	
+	/*
+	* save_user_details
+	*/
+	public function save_user_details(){
+		//print get_class();
+	}
+	
+	/*
+	* save_mailchimp
+	* @param string $email 
+	* @param string $attribute User information to be changed
+	* @param string $field The corresponding field in Mailchimp that relates to the attribute (FNAME, LNAME, etc.)
+	*
+	*/
+	public function save_mailchimp($email,$attribute, $field){
+		
+		$email_md5_hash = md5($email); 
+		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+		
+		$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
+		//$result .= print_r($_SESSION,true);
+		mail("milder.lisondra@jewsforjesus.org","Information sent to mailchimp", print_r($_SESSION,true));		
+		//print '<pre>'; print_r($result); print '</pre>';
+	}
+}
+
+
