@@ -67,15 +67,16 @@ $user_request = trim($_POST['Body']);
 			
 			if($result === false){  // email does not exist
 				$text = print_r($result, true);
-				save_user_details("email", $_SESSION['user_email']);
-				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				//$_SESSION['last_question_asked'] = 'first_name';
+				save_user_details("email", $_SESSION['user_email']); // saving to local database
 				
 				// this section will need to placed within the save_user_details function or in a separate function
 				$result = $mc->post('/lists/'.$list_id.'/members', array(
 					'email_address' => $_SESSION['user_email'],
 					'status' => 'subscribed'
 				));	
+				
+				$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'EMAIL');
+				
 				if($result['status'] == 'subscribed'){
 					$email_text = 'User ' . $_SESSION['user_email'] . ' has been added to mailing list ' . $list_id;
 				}else{
@@ -85,38 +86,6 @@ $user_request = trim($_POST['Body']);
 				
 				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
 				$_SESSION['last_question_asked'] = 'first_name';				
-			}
-			
-			if($result === true){  // email exists; there is no need to save user details
-				//extract($result->fetch_array(MYSQLI_ASSOC));
-				//mail("milder.lisondra@yahoo.com","email exists",print_r($result,true));
-				//$app_response = $responses_array['exists'];
-				//$app_response .= ' ' . $responses_array['subscribe'];
-				// $_SESSION['last_question_asked'] = 'email';
-				
-				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				//$_SESSION['last_question_asked'] = 'first_name';
-				
-			}else{ // user email does not exist save to db and send to mailchimp
-				$text = print_r($result, true);
-				save_user_details("email", $_SESSION['user_email']);
-				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				//$_SESSION['last_question_asked'] = 'first_name';
-				
-				// this section will need to placed within the save_user_details function or in a separate function
-				$result = $mc->post('/lists/'.$list_id.'/members', array(
-					'email_address' => $_SESSION['user_email'],
-					'status' => 'subscribed'
-				));	
-				if($result['status'] == 'subscribed'){
-					$email_text = 'User ' . $_SESSION['user_email'] . ' has been added to mailing list ' . $list_id;
-				}else{
-					$email_text = 'There was a problem adding user ' . $_SESSION['user_email'] . ' to list ' . $list_id;
-				}				
-				//mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
-				
-				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				$_SESSION['last_question_asked'] = 'first_name';
 			}
 			
 			
@@ -149,9 +118,7 @@ $user_request = trim($_POST['Body']);
 		$_SESSION['last_question_asked'] = 'jewish';
 		
 		// Update MailChimp
-	    $email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('LNAME'=>$_SESSION['last_name'])));
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['last_name'], 'LNAME');
 		
 	// Fifth question; system asks if user is a Believer; if user response is 'no', end of questions
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && $_SESSION['last_question_asked'] == "jewish" ){
@@ -162,10 +129,7 @@ $user_request = trim($_POST['Body']);
 		$_SESSION['last_question_asked'] = 'believer';
 
 		// Update MailChimp
-		$email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('JEWISH'=>$_SESSION['jewish'])));
-		
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
 	}
 	elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
 		$_SESSION['believer'] = strtolower($user_request);
@@ -173,10 +137,7 @@ $user_request = trim($_POST['Body']);
 		$app_response = $responses_array['final_thanks'];
 		
 		// Update MailChimp
-		$email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('BELIEVER'=>$_SESSION['believer'])));
-
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['believer'], 'BELIEVER');
 		
 		session_destroy();		
 	}else{
@@ -286,7 +247,7 @@ class JFJ_subscribe{
 		
 		$email_md5_hash = md5($email); 
 		
-		if($field == 'email'){
+		if(strtolower($field) == 'email'){
 			$endpoint = '/lists/'. LIST_ID . '/members/';
 			$result = $this->mc->post($endpoint,
 							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute), 'status' => 'subscribed'));
