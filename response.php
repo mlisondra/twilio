@@ -121,9 +121,11 @@ $user_request = trim($_POST['Body']);
 		$_SESSION['last_question_asked'] = 'jewish';
 		
 		// Update MailChimp
-	    $email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('LNAME'=>$_SESSION['last_name'])));
+	    //$email_md5_hash = md5($_SESSION['user_email']); 
+		//$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
+		//$result = $mc->patch($endpoint,array('merge_fields' => array('LNAME'=>$_SESSION['last_name'])));
+		
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['last_name'], 'LNAME');
 		
 	// Fifth question; system asks if user is a Believer; if user response is 'no', end of questions
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && $_SESSION['last_question_asked'] == "jewish" ){
@@ -134,9 +136,11 @@ $user_request = trim($_POST['Body']);
 		$_SESSION['last_question_asked'] = 'believer';
 
 		// Update MailChimp
-		$email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('JEWISH'=>$_SESSION['jewish'])));
+		//$email_md5_hash = md5($_SESSION['user_email']); 
+		//$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
+		//$result = $mc->patch($endpoint,array('merge_fields' => array('JEWISH'=>$_SESSION['jewish'])));
+		
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
 		
 	}
 	elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
@@ -145,10 +149,10 @@ $user_request = trim($_POST['Body']);
 		$app_response = $responses_array['final_thanks'];
 		
 		// Update MailChimp
-		$email_md5_hash = md5($_SESSION['user_email']); 
-		$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
-		$result = $mc->patch($endpoint,array('merge_fields' => array('BELIEVER'=>$_SESSION['believer'])));
-
+		//$email_md5_hash = md5($_SESSION['user_email']); 
+		//$endpoint = '/lists/'.$list_id . '/members/'.$email_md5_hash;
+		//$result = $mc->patch($endpoint,array('merge_fields' => array('BELIEVER'=>$_SESSION['believer'])));
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['believer'], 'BELIEVER');
 		
 		session_destroy();		
 	}else{
