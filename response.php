@@ -62,21 +62,20 @@ $user_request = trim($_POST['Body']);
 		if(!filter_var(strtolower($user_request), FILTER_VALIDATE_EMAIL) === false) { // validate email address
 			$_SESSION['user_email'] = strtolower($user_request);
 			
-			// Check to see if the email exists in the database
-			$sql = "SELECT * FROM visitors WHERE `email` = '".$_SESSION['user_email']."'";
-			$result = $mysqli_conn->query($sql);
-			if($result->num_rows == 1){  // email exists; there is no need to save user details
-				extract($result->fetch_array(MYSQLI_ASSOC));
+			// Check to see if the email exists within MailChimp
+			$result = $jfj_obj->get_user($_SESSION['user_email']);
+			
+			//$sql = "SELECT * FROM visitors WHERE `email` = '".$_SESSION['user_email']."'";
+			//$result = $mysqli_conn->query($sql);
+			
+			if($result === true){  // email exists; there is no need to save user details in local store
+				//extract($result->fetch_array(MYSQLI_ASSOC));
 				mail("milder.lisondra@yahoo.com","email exists",print_r($result,true));
-				$app_response = $responses_array['exists'];
-				$app_response .= ' ' . $responses_array['subscribe'];
-				$_SESSION['last_question_asked'] = 'email';
+			
 				
 			}else{ // user email does not exist save to db and send to mailchimp
 				$text = print_r($result, true);
 				save_user_details("email", $_SESSION['user_email']);
-				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				$_SESSION['last_question_asked'] = 'first_name';
 				
 				// this section will need to placed within the save_user_details function or in a separate function
 				$result = $mc->post('/lists/'.$list_id.'/members', array(
@@ -91,7 +90,10 @@ $user_request = trim($_POST['Body']);
 				mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
 				
 			}
-			
+
+			$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+			$_SESSION['last_question_asked'] = 'first_name';
+				
 			mail("milder.lisondra@jewsforjesus.org","sql result for email",$text);
 			
 		}else{
@@ -105,10 +107,6 @@ $user_request = trim($_POST['Body']);
 		save_user_details("first_name", $_SESSION['first_name'],true);
 		
 		// Update MailChimp
-		//$email_md5_hash = md5($_SESSION['user_email']); 
-		//$endpoint = '/lists/'.$list_id . '/members/'. $email_md5_hash;
-		//$result = $mc->patch($endpoint,array('merge_fields' => array('FNAME'=>$_SESSION['first_name'])));
-		
 		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['first_name'], 'FNAME');
 				
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
@@ -222,6 +220,22 @@ class JFJ_subscribe{
 		// This needs to be done here in the construct
 		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
 		$this->user_email = md5($_SESSION['user_email']);
+		
+	}
+		
+	/*
+	* Get user information for given id/email
+	* @param string $email User email
+	*/
+	public function get_user($email){
+		$email_md5_hash = md5($email); 
+		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+		$result = $this->mc->get($endpoint);
+		if($result['status'] == '404'){
+			print 'user does not exist';
+		}else{
+			return true;
+		}
 		
 	}
 	
