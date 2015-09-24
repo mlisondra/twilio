@@ -65,24 +65,11 @@ $user_request = trim($_POST['Body']);
 			// Check to see if the email exists within MailChimp
 			$result = $jfj_obj->get_user($_SESSION['user_email']);
 			
-			//$sql = "SELECT * FROM visitors WHERE `email` = '".$_SESSION['user_email']."'";
-			//$result = $mysqli_conn->query($sql);
-			
-			if($result === true){  // email exists; there is no need to save user details
-				//extract($result->fetch_array(MYSQLI_ASSOC));
-				mail("milder.lisondra@yahoo.com","email exists",print_r($result,true));
-				//$app_response = $responses_array['exists'];
-				//$app_response .= ' ' . $responses_array['subscribe'];
-				// $_SESSION['last_question_asked'] = 'email';
-				
-				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				$_SESSION['last_question_asked'] = 'first_name';
-				
-			}else{ // user email does not exist save to db and send to mailchimp
+			if($result === false){  // email does not exist
 				$text = print_r($result, true);
 				save_user_details("email", $_SESSION['user_email']);
-				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
-				$_SESSION['last_question_asked'] = 'first_name';
+				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+				//$_SESSION['last_question_asked'] = 'first_name';
 				
 				// this section will need to placed within the save_user_details function or in a separate function
 				$result = $mc->post('/lists/'.$list_id.'/members', array(
@@ -94,11 +81,44 @@ $user_request = trim($_POST['Body']);
 				}else{
 					$email_text = 'There was a problem adding user ' . $_SESSION['user_email'] . ' to list ' . $list_id;
 				}				
-				mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
+				//mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
 				
+				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+				$_SESSION['last_question_asked'] = 'first_name';				
 			}
 			
-			mail("milder.lisondra@jewsforjesus.org","sql result for email",$text);
+			if($result === true){  // email exists; there is no need to save user details
+				//extract($result->fetch_array(MYSQLI_ASSOC));
+				//mail("milder.lisondra@yahoo.com","email exists",print_r($result,true));
+				//$app_response = $responses_array['exists'];
+				//$app_response .= ' ' . $responses_array['subscribe'];
+				// $_SESSION['last_question_asked'] = 'email';
+				
+				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+				//$_SESSION['last_question_asked'] = 'first_name';
+				
+			}else{ // user email does not exist save to db and send to mailchimp
+				$text = print_r($result, true);
+				save_user_details("email", $_SESSION['user_email']);
+				//$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+				//$_SESSION['last_question_asked'] = 'first_name';
+				
+				// this section will need to placed within the save_user_details function or in a separate function
+				$result = $mc->post('/lists/'.$list_id.'/members', array(
+					'email_address' => $_SESSION['user_email'],
+					'status' => 'subscribed'
+				));	
+				if($result['status'] == 'subscribed'){
+					$email_text = 'User ' . $_SESSION['user_email'] . ' has been added to mailing list ' . $list_id;
+				}else{
+					$email_text = 'There was a problem adding user ' . $_SESSION['user_email'] . ' to list ' . $list_id;
+				}				
+				//mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
+				
+				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
+				$_SESSION['last_question_asked'] = 'first_name';
+			}
+			
 			
 		}else{
 			$app_response = 'Please enter a valid email address';
@@ -240,7 +260,7 @@ class JFJ_subscribe{
 		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 		$result = $this->mc->get($endpoint);
 		if($result['status'] == '404'){
-			print 'user does not exist';
+			return false;
 		}else{
 			return true;
 		}
@@ -256,6 +276,7 @@ class JFJ_subscribe{
 	
 	/*
 	* save_mailchimp
+	* Saves or updates user data to MailChimp. If the $field parameter is 'email', the function will add a new member
 	* @param string $email 
 	* @param string $attribute User information to be changed
 	* @param string $field The corresponding field in Mailchimp that relates to the attribute (FNAME, LNAME, etc.)
@@ -264,12 +285,15 @@ class JFJ_subscribe{
 	public function save_mailchimp($email,$attribute, $field){
 		
 		$email_md5_hash = md5($email); 
-		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 		
-		$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
-		//$result .= print_r($_SESSION,true);
-		mail("milder.lisondra@jewsforjesus.org","Information sent to mailchimp", print_r($_SESSION,true));		
-		//print '<pre>'; print_r($result); print '</pre>';
+		if($field == 'email'){
+			$endpoint = '/lists/'. LIST_ID . '/members/';
+			$result = $this->mc->post($endpoint,
+							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute), 'status' => 'subscribed'));
+		}else{
+			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
+		}
 	}
 }
 
