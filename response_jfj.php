@@ -100,10 +100,6 @@ $user_request = trim($_POST['Body']);
 		save_user_details("first_name", $_SESSION['first_name'],true);
 		
 		// Update MailChimp
-		//$email_md5_hash = md5($_SESSION['user_email']); 
-		//$endpoint = '/lists/'.$list_id . '/members/'. $email_md5_hash;
-		//$result = $mc->patch($endpoint,array('merge_fields' => array('FNAME'=>$_SESSION['first_name'])));
-		
 		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['first_name'], 'FNAME');
 				
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
@@ -154,9 +150,6 @@ $xml_response .= '</Response>';
 print $xml_response;
 
 
-
-// Maybe this should be a class?
-
 /**
 * save_user_details
 * @param array $args Key-value pairs of user provided information
@@ -178,11 +171,9 @@ function save_user_details($field, $value, $update = false){
 		// prepare and bind
 		$stmt = $mysqli_conn->prepare("INSERT INTO visitors (" . $field . ") VALUES (?)");
 		$stmt->bind_param("s", $value);
+		
+		$stmt->execute(); //execute sql query
 
-		
-		$stmt->execute();
-		
-		//$sql = "INSERT INTO visitors (". $field . ") VALUES ('" . $value . "')"; // enter email
 	}else{
 		$sql = "UPDATE visitors SET " . $field . " = '". $value ."' WHERE `email` = '" . $_SESSION['user_email'] . "'"; // update user record with optional information
 		if ($mysqli_conn->query($sql) === TRUE) {
@@ -191,7 +182,6 @@ function save_user_details($field, $value, $update = false){
 			$result = "Error: " . $sql . "<br>" . $mysqli_conn->error;
 		}
 	}
-
 	
 	$result .= print_r($_SESSION,true);
 	mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
@@ -199,7 +189,7 @@ function save_user_details($field, $value, $update = false){
 
 
 
-
+// class JFJ_subscribe
 class JFJ_subscribe{
 	
 	public $mc;
@@ -208,7 +198,8 @@ class JFJ_subscribe{
 	public function __construct(){
 		// This needs to be done here in the construct
 		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
-		$this->user_email = md5($_SESSION['user_email']);
+		//$this->user_email = md5($_SESSION['user_email']);
+		$this->user_email = strtolower(trim(md5($_SESSION['user_email']))); 
 		
 	}
 		
@@ -217,8 +208,8 @@ class JFJ_subscribe{
 	* @param string $email User email
 	*/
 	public function get_user($email){
-		$email_md5_hash = md5($email); 
-		$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+		$email_md5_hash = strtolower(trim(md5($email))); 
+		$endpoint = '/lists/'. LIST_ID . '/members/'. $this->user_email;
 		$result = $this->mc->get($endpoint);
 		if($result['status'] == '404'){
 			return false;
