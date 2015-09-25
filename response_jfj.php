@@ -166,8 +166,8 @@ function save_user_details($field, $value, $update = false){
 		}
 	}
 	
-	$result .= print_r($_SESSION,true);
-	mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
+	//$result .= print_r($_SESSION,true);
+	//mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
 }
 
 
