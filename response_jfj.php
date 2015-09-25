@@ -54,7 +54,7 @@ $user_request = trim($_POST['Body']);
 
 
 	// First response to user; system asks for users email
-	if(strtolower($user_request) == "subscribe"){ 
+	if(strtolower(str_replace(".","",$user_request)) == "subscribe"){ 
 		$app_response = $responses_array['subscribe'];
 		$_SESSION['last_question_asked'] = 'email';
 		
