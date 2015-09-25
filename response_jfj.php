@@ -49,8 +49,10 @@ $responses_array = array(
 		"exists"=>"That email address is already subscribed."
 	);
 	
-
+$user_phone = trim($_POST['From']);
 $user_request = trim($_POST['Body']);
+
+mail("milder.lisondra@yahoo.com","Meta data from Twilio POST",$user_phone);
 
 
 	// First response to user; system asks for users email
@@ -66,29 +68,13 @@ $user_request = trim($_POST['Body']);
 			$result = $jfj_obj->get_user($_SESSION['user_email']);
 			
 			if($result === false){  // email does not exist
-				$text = print_r($result, true);
 				save_user_details("email", $_SESSION['user_email']); // saving to local database
 				
-				// this section will need to placed within the save_user_details function or in a separate function
-				$result = $mc->post('/lists/'.$list_id.'/members', array(
-					'email_address' => $_SESSION['user_email'],
-					'status' => 'subscribed'
-				));	
-				
-				$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'EMAIL');
-				
-				if($result['status'] == 'subscribed'){
-					$email_text = 'User ' . $_SESSION['user_email'] . ' has been added to mailing list ' . $list_id;
-				}else{
-					$email_text = 'There was a problem adding user ' . $_SESSION['user_email'] . ' to list ' . $list_id;
-				}				
-				//mail("milder.lisondra@yahoo.com","result from Mailchimp API add",$result['status']);			
+				$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'EMAIL',$user_phone);
 				
 				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
 				$_SESSION['last_question_asked'] = 'first_name';				
 			}
-			
-			
 		}else{
 			$app_response = 'Please enter a valid email address';
 			$_SESSION['last_question_asked'] = 'email';
@@ -141,7 +127,6 @@ $user_request = trim($_POST['Body']);
 	
 	}
 
-//$app_response .= print_r($_SESSION,true);
 $xml_response = '<?xml version="1.0" encoding="UTF-8" ?>';
 $xml_response .= '<Response>';
 $xml_response .= '<Message>' . $app_response . '</Message>';
@@ -234,14 +219,14 @@ class JFJ_subscribe{
 	* @param string $field The corresponding field in Mailchimp that relates to the attribute (FNAME, LNAME, etc.)
 	*
 	*/
-	public function save_mailchimp($email,$attribute, $field){
+	public function save_mailchimp($email,$attribute, $field, $user_phone = 0){
 		
 		$email_md5_hash = md5($email); 
 		
 		if(strtolower($field) == 'email'){
 			$endpoint = '/lists/'. LIST_ID . '/members/';
 			$result = $this->mc->post($endpoint,
-							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute), 'status' => 'subscribed'));
+							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=> $user_phone), 'status' => 'subscribed'));
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
