@@ -52,8 +52,6 @@ $responses_array = array(
 $user_phone = trim($_POST['From']);
 $user_request = trim($_POST['Body']);
 
-mail("milder.lisondra@yahoo.com","Meta data from Twilio POST",$user_phone);
-
 
 	// First response to user; system asks for users email
 	if(strtolower($user_request) == "subscribe"){ 
