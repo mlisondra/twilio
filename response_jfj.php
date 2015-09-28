@@ -233,16 +233,19 @@ class JFJ_subscribe{
 		
 		$email_md5_hash = md5($email); 
 		
-		if(strtolower($field) == 'email'){
+		if($field == 'email'){
 			$endpoint = '/lists/'. LIST_ID . '/members/';
 			$result = $this->mc->post($endpoint,
-							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=> $user_phone), 'status' => 'subscribed'));
-							
-							mail("milder.lisondra@yahoo.com","Mailchimp post result",print_r($result,true));
+							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=>$user_phone), 'status' => 'subscribed'));
+		}elseif($field == 'interests'){
+			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
+			$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));	
+			// print '<pre>'; print_r($result); print '</pre>';
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
 		}
+		
 	}
 }
 
