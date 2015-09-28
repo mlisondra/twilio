@@ -17,10 +17,12 @@ require("vendor/autoload.php");
 $mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: personal
 $mc = new \VPS\MailChimp('585fd4605ba0afbb77335bbcef033dca-us10'); // API key: JFJ account
 $list_id = 'd36f7938ca'; // personal
-$list_id = '4ec624cff2'; // JFJ account
+//$list_id = '4ec624cff2'; // JFJ account; testing list
+$list_id = '5a70adfde6'; //JFJ account; live list
 
 // JFJ
-define("LIST_ID","4ec624cff2");
+//define("LIST_ID","4ec624cff2"); // JFJ account; testing list
+define("LIST_ID","5a70adfde6"); // JFJ account; live list
 define("MAILCHIMP_API_KEY","585fd4605ba0afbb77335bbcef033dca-us10");
 
 $jfj_obj = new JFJ_subscribe();
@@ -109,15 +111,25 @@ $user_request = trim($_POST['Body']);
 		$_SESSION['last_question_asked'] = 'believer';
 
 		// Update MailChimp
-		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
+		//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
 	}
 	elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
 		$_SESSION['believer'] = strtolower($user_request);
 		save_user_details("believer", $_SESSION['believer'],true);
 		$app_response = $responses_array['final_thanks'];
 		
+		if(($_SESSION['jewish'] == 'no') && ($_SESSION['believer'] == "yes")){
+			$ccode = 'GB'; // gentile believer
+		}elseif( ($_SESSION['jewish'] == 'no') && ($_SESSION['believer'] == "no") ){
+			$ccode = 'UG'; // unbelieving gentile
+		}elseif( ($_SESSION['jewish'] == 'yes') && ($_SESSION['believer'] == "no") ){
+			$ccode = 'UJ'; // unbelieving jew
+		}elseif( ($_SESSION['jewish'] == 'yes') && ($_SESSION['believer'] == "yes") ){
+			$ccode = 'JB'; // jewish believer
+		}
 		// Update MailChimp
-		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['believer'], 'BELIEVER');
+		//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['believer'], 'BELIEVER');
+		$jfj_obj->save_mailchimp($_SESSION['user_email'], $ccode, 'CCODE');
 		
 		session_destroy();		
 	}else{
@@ -225,6 +237,8 @@ class JFJ_subscribe{
 			$endpoint = '/lists/'. LIST_ID . '/members/';
 			$result = $this->mc->post($endpoint,
 							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=> $user_phone), 'status' => 'subscribed'));
+							
+							mail("milder.lisondra@yahoo.com","Mailchimp post result",print_r($result,true));
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
