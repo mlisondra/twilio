@@ -177,9 +177,6 @@ function save_user_details($field, $value, $update = false){
 			$result = "Error: " . $sql . "<br>" . $mysqli_conn->error;
 		}
 	}
-	
-	//$result .= print_r($_SESSION,true);
-	//mail("milder.lisondra@jewsforjesus.org","User detail saved ",$result);
 }
 
 
