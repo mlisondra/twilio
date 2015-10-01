@@ -257,9 +257,6 @@ class JFJ_subscribe{
 			}else{
 				$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));
 			}
-			
-			$body = print_r($result,true);
-			mail("milder.lisondra@yahoo.com",'result from interests call',$attribute);
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
