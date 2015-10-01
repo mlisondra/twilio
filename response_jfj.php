@@ -253,9 +253,9 @@ class JFJ_subscribe{
 		}elseif($field == 'INTERESTS'){
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			if($attribute == "messiah"){
-				$result = $this->mc->patch($endpoint,array('interests' => array('393025b2aa'=>true)));	
+				$result = $this->mc->patch($endpoint,array('interests' => array('393025b2aa'=>true))); // user is assigned to Group 'Issues'	
 			}else{
-				$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));
+				$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true))); // User is assigned to Groups 'General Communications' and 'Realtime'
 			}
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
