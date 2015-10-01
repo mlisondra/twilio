@@ -130,8 +130,6 @@ $user_request = trim($_POST['Body']);
 		$app_response = $responses_array['believer']; 
 		$_SESSION['last_question_asked'] = 'believer';
 
-		// Update MailChimp
-		//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
 		$_SESSION['believer'] = strtolower($user_request);
 		save_user_details("believer", $_SESSION['believer'],true);
