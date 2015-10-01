@@ -14,9 +14,9 @@ try {
 
 // Mailchimp Wrapper
 require("vendor/autoload.php");
-$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: personal
+//$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: personal
 $mc = new \VPS\MailChimp('585fd4605ba0afbb77335bbcef033dca-us10'); // API key: JFJ account
-$list_id = 'd36f7938ca'; // personal
+//$list_id = 'd36f7938ca'; // personal
 //$list_id = '4ec624cff2'; // JFJ account; testing list
 $list_id = '5a70adfde6'; //JFJ account; live list
 
@@ -71,6 +71,7 @@ $user_request = trim($_POST['Body']);
 				save_user_details("email", $_SESSION['user_email']); // saving to local database
 				
 				$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'EMAIL',$user_phone);
+				//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'interests');
 				
 				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
 				$_SESSION['last_question_asked'] = 'first_name';				
@@ -112,8 +113,7 @@ $user_request = trim($_POST['Body']);
 
 		// Update MailChimp
 		//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['jewish'], 'JEWISH');
-	}
-	elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
+	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && !empty($_SESSION['jewish']) && $_SESSION['last_question_asked'] == "believer" ){
 		$_SESSION['believer'] = strtolower($user_request);
 		save_user_details("believer", $_SESSION['believer'],true);
 		$app_response = $responses_array['final_thanks'];
@@ -233,14 +233,13 @@ class JFJ_subscribe{
 		
 		$email_md5_hash = md5($email); 
 		
-		if($field == 'email'){
+		if($field == 'EMAIL'){
 			$endpoint = '/lists/'. LIST_ID . '/members/';
 			$result = $this->mc->post($endpoint,
 							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=>$user_phone), 'status' => 'subscribed'));
-		}elseif($field == 'interests'){
+		}elseif($field == 'INTERESTS'){
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));	
-			// print '<pre>'; print_r($result); print '</pre>';
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
