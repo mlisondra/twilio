@@ -108,8 +108,9 @@ $user_request = trim($_POST['Body']);
 			$jfj_obj->save_mailchimp($_SESSION['user_email'], $ccode, 'CCODE');
 			$jfj_obj->save_mailchimp($_SESSION['user_email'], 'messiah', 'INTERESTS');
 			
-		}else{
 			
+		}else{
+			$jfj_obj->save_mailchimp($_SESSION['user_email'], 'nonmessiah', 'INTERESTS');
 			$app_response = str_replace("LAST_NAME", $_SESSION['last_name'],$responses_array['thanks_signedup']);
 			$app_response .= ". " . str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['jewish']);
 			$_SESSION['last_question_asked'] = 'jewish';
@@ -118,6 +119,9 @@ $user_request = trim($_POST['Body']);
 		// Update MailChimp
 		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['last_name'], 'LNAME');
 		
+		if($_SESSION['messiah']){
+			session_destroy();
+		}
 	// Fifth question; system asks if user is a Believer; if user response is 'no', end of questions
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name']) && $_SESSION['last_question_asked'] == "jewish" ){
 		$_SESSION['yes_no'] = strtolower($user_request);
@@ -255,6 +259,9 @@ class JFJ_subscribe{
 			}else{
 				$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));
 			}
+			
+			$body = print_r($result,true);
+			mail("milder.lisondra@yahoo.com",'result from interests call',$attribute);
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
