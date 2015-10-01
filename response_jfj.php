@@ -56,9 +56,13 @@ $user_request = trim($_POST['Body']);
 
 
 	// First response to user; system asks for users email
-	if(strtolower(str_replace(".","",$user_request)) == "subscribe"){ 
+	if(strtolower(str_replace(".","",$user_request)) == "subscribe" || strtolower(str_replace(".","",$user_request)) == "messiah"){ 
 		$app_response = $responses_array['subscribe'];
 		$_SESSION['last_question_asked'] = 'email';
+		
+		if(strtolower(str_replace(".","",$user_request)) == "messiah"){		
+			$_SESSION['messiah'] = true;
+		}
 		
 	}elseif( $_SESSION['last_question_asked'] == "email" ){
 		if(!filter_var(strtolower($user_request), FILTER_VALIDATE_EMAIL) === false) { // validate email address
@@ -71,7 +75,6 @@ $user_request = trim($_POST['Body']);
 				save_user_details("email", $_SESSION['user_email']); // saving to local database
 				
 				$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'EMAIL',$user_phone);
-				//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['user_email'], 'interests');
 				
 				$app_response = $responses_array['first_name']; // Second response to user; asks for first name
 				$_SESSION['last_question_asked'] = 'first_name';				
@@ -92,14 +95,26 @@ $user_request = trim($_POST['Body']);
 		$app_response = str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['last_name']);
 		$_SESSION['last_question_asked'] = 'last_name';
 
-	// Fourth question; system asks if user is Jewish; maybe last question if user response is 'no'
+	// Fourth question; system asks if user is Jewish
 	}elseif( isset($_SESSION['user_email']) && !empty($_SESSION['first_name']) && $_SESSION['last_question_asked'] == "last_name" ){
 		$_SESSION['last_name'] = $user_request;
 		save_user_details("last_name", $_SESSION['last_name'],true);
-		$app_response = str_replace("LAST_NAME", $_SESSION['last_name'],$responses_array['thanks_signedup']);
-		$app_response .= ". " . str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['jewish']);
-		$_SESSION['last_question_asked'] = 'jewish';
+		if($_SESSION['messiah']){
 		
+			$app_response = $responses_array['final_thanks'];
+			$_SESSION['last_question_asked'] = 'last_name';
+			
+			$ccode = 'UJ';
+			$jfj_obj->save_mailchimp($_SESSION['user_email'], $ccode, 'CCODE');
+			$jfj_obj->save_mailchimp($_SESSION['user_email'], 'messiah', 'INTERESTS');
+			
+		}else{
+			
+			$app_response = str_replace("LAST_NAME", $_SESSION['last_name'],$responses_array['thanks_signedup']);
+			$app_response .= ". " . str_replace("FIRST_NAME", $_SESSION['first_name'],$responses_array['jewish']);
+			$_SESSION['last_question_asked'] = 'jewish';
+		}
+
 		// Update MailChimp
 		$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['last_name'], 'LNAME');
 		
@@ -128,7 +143,6 @@ $user_request = trim($_POST['Body']);
 			$ccode = 'JB'; // jewish believer
 		}
 		// Update MailChimp
-		//$jfj_obj->save_mailchimp($_SESSION['user_email'], $_SESSION['believer'], 'BELIEVER');
 		$jfj_obj->save_mailchimp($_SESSION['user_email'], $ccode, 'CCODE');
 		
 		session_destroy();		
@@ -236,7 +250,11 @@ class JFJ_subscribe{
 							array('email_address'=>$email, 'merge_fields' => array($field=>$attribute,'PHONE'=>$user_phone), 'status' => 'subscribed'));
 		}elseif($field == 'INTERESTS'){
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
-			$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));	
+			if($attribute == "messiah"){
+				$result = $this->mc->patch($endpoint,array('interests' => array('393025b2aa'=>true)));	
+			}else{
+				$result = $this->mc->patch($endpoint,array('interests' => array('07c37fbfaf'=>true,'eea9b73e6a'=>true)));
+			}
 		}else{
 			$endpoint = '/lists/'. LIST_ID . '/members/'. $email_md5_hash;
 			$result = $this->mc->patch($endpoint,array('merge_fields' => array($field=>$attribute)));
