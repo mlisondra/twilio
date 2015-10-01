@@ -206,7 +206,6 @@ class JFJ_subscribe{
 	public function __construct(){
 		// This needs to be done here in the construct
 		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
-		//$this->user_email = md5($_SESSION['user_email']);
 		$this->user_email = strtolower(trim(md5($_SESSION['user_email']))); 
 		
 	}
