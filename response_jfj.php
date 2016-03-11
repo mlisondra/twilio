@@ -1,9 +1,10 @@
 <?php 
 
-$host = '10.5.223.9';
-$db_name = 'twadmin_twilio';
-$username = 'twadmin_twilio';
-$password = '9pyziTxBJbm0';
+// Stores user provided data (ie. email, name, etc.)
+$host = 'localhost';
+$db_name = 'twiliojf_twilio';
+$username = 'twiliojf_twilio';
+$password = 'fbv696pwsw';
 
 
 try {
@@ -15,15 +16,13 @@ try {
 // Mailchimp Wrapper
 require("vendor/autoload.php");
 //$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: personal
-$mc = new \VPS\MailChimp('585fd4605ba0afbb77335bbcef033dca-us10'); // API key: JFJ account
-//$list_id = 'd36f7938ca'; // personal
-//$list_id = '4ec624cff2'; // JFJ account; testing list
-$list_id = '5a70adfde6'; //JFJ account; live list
+$mc = new \VPS\MailChimp('aea7952e0fbea388f1352ac1b8a7d098-us10'); // API key: JFJ account
+
 
 // JFJ
-//define("LIST_ID","4ec624cff2"); // JFJ account; testing list
+//define("LIST_ID","d36f7938ca"); // JFJ account; testing list
 define("LIST_ID","5a70adfde6"); // JFJ account; live list
-define("MAILCHIMP_API_KEY","585fd4605ba0afbb77335bbcef033dca-us10");
+define("MAILCHIMP_API_KEY","aea7952e0fbea388f1352ac1b8a7d098-us10");
 
 $jfj_obj = new JFJ_subscribe();
 
@@ -55,7 +54,7 @@ $user_phone = trim($_POST['From']);
 $user_request = trim($_POST['Body']);
 
 
-	// First response to user; system asks for users email
+	// First response to user; system asks for user's email
 	if(strtolower(str_replace(".","",$user_request)) == "subscribe" || strtolower(str_replace(".","",$user_request)) == "messiah"){ 
 		$app_response = $responses_array['subscribe'];
 		$_SESSION['last_question_asked'] = 'email';
@@ -101,6 +100,8 @@ $user_request = trim($_POST['Body']);
 		save_user_details("last_name", $_SESSION['last_name'],true);
 		if($_SESSION['messiah']){
 		
+			save_user_details("jewish", 'yes',true);
+			save_user_details("believer", 'no',true);
 			$app_response = $responses_array['final_thanks'];
 			$_SESSION['last_question_asked'] = 'last_name';
 			
@@ -263,5 +264,3 @@ class JFJ_subscribe{
 		
 	}
 }
-
-
