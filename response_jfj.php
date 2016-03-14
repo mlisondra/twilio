@@ -15,17 +15,13 @@ try {
 
 // Mailchimp Wrapper
 require("vendor/autoload.php");
-//$mc = new \VPS\MailChimp('1ec0c9c10a65da0f2ff2930b13158df2-us11'); // API key: personal
 $mc = new \VPS\MailChimp('aea7952e0fbea388f1352ac1b8a7d098-us10'); // API key: JFJ account
 
-
 // JFJ
-//define("LIST_ID","d36f7938ca"); // JFJ account; testing list
-define("LIST_ID","5a70adfde6"); // JFJ account; live list
+define("LIST_ID","5a70adfde6"); // JFJ account; live list. Jews for Jesus, United States
 define("MAILCHIMP_API_KEY","aea7952e0fbea388f1352ac1b8a7d098-us10");
 
 $jfj_obj = new JFJ_subscribe();
-
 				
 				
 if(strtolower(trim($_POST['Body'])) == "clear"){
@@ -163,7 +159,7 @@ print $xml_response;
 
 
 /**
-* save_user_details
+* Save user details to local database
 * @param array $args Key-value pairs of user provided information
 * @return boolean
 * Example ("first_name"=>"King Arthur")
@@ -198,15 +194,15 @@ function save_user_details($field, $value, $update = false){
 
 
 
-// class JFJ_subscribe
+// Class to manage ineraction with MailChimp API
 class JFJ_subscribe{
 	
 	public $mc;
 	public $user_email;
 	
 	public function __construct(){
-		// This needs to be done here in the construct
-		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key: personal
+
+		$this->mc = new \VPS\MailChimp(MAILCHIMP_API_KEY); // API key
 		$this->user_email = strtolower(trim(md5($_SESSION['user_email']))); 
 		
 	}
@@ -227,13 +223,7 @@ class JFJ_subscribe{
 		
 	}
 	
-	/*
-	* save_user_details
-	*/
-	public function save_user_details(){
-		//print get_class();
-	}
-	
+
 	/*
 	* save_mailchimp
 	* Saves or updates user data to MailChimp. If the $field parameter is 'email', the function will add a new member
